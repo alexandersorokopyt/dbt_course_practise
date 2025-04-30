@@ -1,0 +1,63 @@
+sources:
+  - name: demo_src
+    description: "Данные из БД авиаперелетов"
+    database: dwh_flight
+    schema: demo_src
+    tables:
+      - name: aircrafts
+      - name: airports
+      - name: seats
+      - name: boarding_passes
+        description: При регистрации на рейс, которая возможна за сутки до плановой даты отправления, пассажиру выдаётся посадочный талон. Он идентифицируется также, как и перелёт — номером билета и номером рейса.
+        columns:
+          - name: ticket_no
+            description: Номер билета
+          - name: flight_id
+            description: Идентификатор рейса
+          - name: boarding_no
+            description: Номер посадочного талона
+          - name: seat_no
+            description: Номер места
+      - name: flights 
+        columns:
+          - name: flight_id
+            description: Идентификатор рейса
+          - name: flight_no
+            description: Номер рейса
+          - name: scheduled_departure
+            description: Время вылета по расписанию
+          - name: scheduled_arrival
+            description: Время прилёта по расписанию
+          - name: departure_airport
+            description: Аэропорт отправления
+          - name: arrival_airport
+            description: Аэропорт прибытия
+          - name: status
+            description: |
+              ### Статус рейса
+              
+              Может принимать одно из следующих значений:
+              * Scheduled: Рейс доступен для бронирования. Это происходит за месяц до плановой даты вылета; до этого запись о рейсе не существует в базе данных.
+              * On Time: Рейс доступен для регистрации (за сутки до плановой даты вылета) и не задержан.
+              * Delayed: Рейс доступен для регистрации (за сутки до плановой даты вылета), но задержан.
+              * Departed: Самолет уже вылетел и находится в воздухе.
+              * Arrived: Самолет прибыл в пункт назначения.
+              * Cancelled: Рейс отменён.
+          - name: aircraft_code
+            description: Код самолета, IATA
+          - name: actual_departure
+            description: Фактическое время вылета
+          - name: actual_arrival
+            description: Фактическое время прилёта
+        freshness:
+          warn_after:
+            count: 6
+            period: hour
+          error_after:
+            count: 1
+            period: day
+          filter: current_timestamp::date - actual_departure::date < 3 
+        loaded_at_field: actual_departure::timestamp
+      - name: ticket_flights
+      - name: tickets
+    
